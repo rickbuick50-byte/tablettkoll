@@ -1,0 +1,33 @@
+<!DOCTYPE html><html lang="sv"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#6a3df0">
+<title>Tablettkoll</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#6a3df0"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Tablettkoll">
+<style>
+body{margin:0;font-family:system-ui,sans-serif;background:linear-gradient(160deg,#6a3df0,#ff5fa2 60%,#ffb347);min-height:100vh;color:#222}
+.w{max-width:440px;margin:auto;padding:20px}
+h1{color:#fff;text-align:center;margin:10px 0 2px}#d{color:#fff;text-align:center;opacity:.9;margin-bottom:16px}
+.c{background:#fff;border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 6px 20px rgba(0,0,0,.15);display:flex;align-items:center;gap:12px}
+.dot{width:46px;height:46px;border-radius:50%;flex:none}
+.n{flex:1;font-weight:700;font-size:18px}.t{font-size:13px;color:#777;font-weight:400}
+input{width:64px;font-size:20px;padding:8px;border:2px solid #ddd;border-radius:12px;text-align:center}
+button{border:0;border-radius:12px;padding:10px 14px;font-size:16px;font-weight:700;color:#fff;cursor:pointer}
+.h{background:#fff;border-radius:20px;padding:16px;margin-top:16px}
+.h div{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:14px}
+.x{background:#999;font-size:13px;padding:6px 10px;margin-top:10px}
+</style></head><body><div class="w">
+<h1>💊 Tablettkoll</h1><div id="d"></div><div id="cards"></div>
+<div class="h"><b>Senaste dagarna</b><div id="hist"></div><button class="x" onclick="undo()">Ångra senaste</button></div></div>
+<script>
+const M=[["m5","5 mg","#6a3df0"],["m10","10 mg","#ff5fa2"],["alv","Alvedon","#ff9a1f"]];
+const K="tablettkoll";let db=JSON.parse(localStorage.getItem(K)||'{"log":[]}');
+const day=t=>new Date(t).toLocaleDateString("sv-SE");
+const save=()=>localStorage.setItem(K,JSON.stringify(db));
+function tot(d){const r={m5:0,m10:0,alv:0},tm={};db.log.filter(e=>day(e.t)==d).forEach(e=>{r[e.k]+=e.n;tm[e.k]=e.t});return[r,tm]}
+function render(){const today=day(Date.now());document.getElementById("d").textContent=new Date().toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
+const[r,tm]=tot(today);document.getElementById("cards").innerHTML=M.map(([k,l,c])=>`<div class="c"><div class="dot" style="background:${c}"></div><div class="n">${l}<br><span class="t">Idag: <b>${r[k]} st</b>${tm[k]?" · senast "+new Date(tm[k]).toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"}):""}</span></div><input id="i${k}" type="number" inputmode="numeric" min="1" value="1"><button style="background:${c}" onclick="add('${k}')">+</button></div>`).join("");
+const days=[...new Set(db.log.map(e=>day(e.t)))].sort().reverse().slice(0,14);
+document.getElementById("hist").innerHTML=days.map(d=>{const[x]=tot(d);return`<div><span>${d}</span><span>5 mg: ${x.m5} · 10 mg: ${x.m10} · Alvedon: ${x.alv}</span></div>`}).join("")||"<div>Inget registrerat än</div>"}
+function add(k){const n=parseInt(document.getElementById("i"+k).value)||0;if(n<1)return;db.log.push({k,n,t:Date.now()});save();render()}
+function undo(){if(db.log.length&&confirm("Ta bort senaste registreringen?")){db.log.pop();save();render()}}
+render();
+</script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")</script></body></html>
