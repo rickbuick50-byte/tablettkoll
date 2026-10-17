@@ -16,7 +16,8 @@ button{border:0;border-radius:12px;padding:10px 14px;font-size:16px;font-weight:
 .x{background:#999;font-size:13px;padding:6px 10px;margin-top:10px}
 </style></head><body><div class="w">
 <h1>💊 Tablettkoll</h1><div id="d"></div><div id="cards"></div>
-<div class="h"><b>Senaste dagarna</b><div id="hist"></div><button class="x" onclick="undo()">Ångra senaste</button></div></div>
+<div class="h"><b>Senaste dagarna</b><div id="hist"></div><button class="x" onclick="undo()">Ångra senaste</button></div>
+<div class="h"><b>📅 Per månad</b><div id="mon"></div></div></div>
 <script>
 const M=[["m5","5 mg","#6a3df0"],["m10","10 mg","#ff5fa2"],["alv","Alvedon","#ff9a1f"]];
 const K="tablettkoll";let db=JSON.parse(localStorage.getItem(K)||'{"log":[]}');
@@ -29,5 +30,9 @@ const days=[...new Set(db.log.map(e=>day(e.t)))].sort().reverse().slice(0,14);
 document.getElementById("hist").innerHTML=days.map(d=>{const[x]=tot(d);return`<div><span>${d}</span><span>5 mg: ${x.m5} · 10 mg: ${x.m10} · Alvedon: ${x.alv}</span></div>`}).join("")||"<div>Inget registrerat än</div>"}
 function add(k){const n=parseInt(document.getElementById("i"+k).value)||0;if(n<1)return;db.log.push({k,n,t:Date.now()});save();render()}
 function undo(){if(db.log.length&&confirm("Ta bort senaste registreringen?")){db.log.pop();save();render()}}
+function months(){const m={};db.log.forEach(e=>{const d=new Date(e.t),k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");m[k]=m[k]||{m5:0,m10:0,alv:0};m[k][e.k]+=e.n});
+const nd=new Date(),cur=nd.getFullYear()+"-"+String(nd.getMonth()+1).padStart(2,"0");
+document.getElementById("mon").innerHTML=Object.keys(m).sort().reverse().map(k=>{const x=m[k],n=new Date(k+"-01").toLocaleDateString("sv-SE",{month:"long",year:"numeric"});return`<div><span>${n}${k==cur?" (pågår)":""}</span><span>5 mg: ${x.m5} · 10 mg: ${x.m10} · Alvedon: ${x.alv}</span></div>`}).join("")||"<div>Inget registrerat än</div>"}
+const _r=render;render=function(){_r();months()};
 render();
 </script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")</script></body></html>
